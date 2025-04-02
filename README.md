@@ -31,6 +31,8 @@ For questions, please feel free to reach out to griswold[at]rand.org.
 
 ## References
 
+Griswold, Max, Beth Ann Griffin, Max Rubinstein, Mincen Liu, Megan Schuler, Elizabeth Stone, Pedro Nascimento de Lima, Bradley D. Stein, and Elizabeth A. Stuart. (2025). "Assessing Bias and Precision in State Policy Evaluations: A Comparative Analysis of Time-Varying Estimators Using Policy Simulations." *arXiv preprint arXiv:2503.20882*. 
+
 ```tex
 @misc{griswold2025assessingbiasprecisionstate,
       title={Assessing Bias and Precision in State Policy Evaluations: A Comparative Analysis of Time-Varying Estimators Using Policy Simulations}, 
