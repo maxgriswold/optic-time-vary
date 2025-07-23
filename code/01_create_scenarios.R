@@ -30,27 +30,29 @@ linear_sunset <- rev(seq(0, 1, 0.2))*full_effect
 instant_plateau  <- c(0, 0.3, 0.7, 1, 0.8, 0.2)*full_effect
 slow_plateau     <- c(0, 0.5, 0.6, 0.8, 0.5, 0.6)*full_effect
 
-time_varying_scenarios <- list(linear_ramp_up, linear_sunset, instant_plateau, slow_plateau)
-scenario_names <- c("I", "II", "III", "IV")
+null_effect <- rep(0, 6)
+
+time_varying_scenarios <- list(linear_ramp_up, linear_sunset, instant_plateau, slow_plateau, null_effect)
+scenario_names <- c("I", "II", "III", "IV", "V")
 
 scenarios <- list()
 
-for (i in 1:4){
+for (i in 1:5){
   scene <- time_varying_scenarios[[i]]
   scenarios[[i]] <- data.table("ttt" = seq(0, length(scene) - 1),
-                                       "smd" = scene/effect_sd,
-                                       "true_effect" = scene,
-                                       "scenario_name" = scenario_names[[i]])
+                               "smd" = scene/effect_sd,
+                               "true_effect" = scene,
+                               "scenario_name" = scenario_names[[i]])
 }
 
 scenarios <- rbindlist(scenarios)
 
-long_names <- c("Ramp Up", "Ramp Down", "Temporary", "Inconsistent")
+long_names <- c("Ramp Up", "Ramp Down", "Temporary", "Inconsistent", "Null")
 scenarios[, scenario_name_label := mapvalues(scenario_name, 
-                                             c("I", "II", "III", "IV"),
+                                             c("I", "II", "III", "IV", "V"),
                                              long_names)]
 
 scenarios[, scenario_name_label := factor(scenario_name_label,
                                           levels = long_names)]
 
-write.csv(scenarios, "./data/scenarios.csv")
+write.csv(scenarios, "./data/scenarios.csv", row.names = F)

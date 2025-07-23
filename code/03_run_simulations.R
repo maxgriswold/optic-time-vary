@@ -3,9 +3,21 @@ rm(list = ls())
 library(optic)
 library(data.table)
 
+library(did)
+library(did2s)
+library(augsynth)
+library(didimputation)
+library(fixest)
+
 df <- fread("./data/overdoses.csv")
 
 time_varying_scenarios <- fread("./data/scenarios.csv")
+
+# Convert to a named list for OPTIC argument:
+time_varying_scenarios[, scenario_name_label := factor(scenario_name_label, levels = c("Ramp Up", "Ramp Down", "Temporary", "Inconsistent", "Null"))]
+
+time_varying_scenarios <- split(time_varying_scenarios$true_effect, 
+                                time_varying_scenarios$scenario_name_label)
 
 df_synth <- fread("./data/df_synthetic_states.csv")
 
@@ -112,8 +124,7 @@ sim_results <- dispatch_simulations(
   sim_config,
   seed = 9780,
   verbose = 0,
-  use_future = T,
-  future.packages = c("didimputation", "did2s", "optic","augsynth", "fixest", "tidyr")
+  use_future = F
   
 )
 
@@ -125,6 +136,41 @@ sim_vary_units <- sim_final[n_units != 25,]
 
 write.csv(sim_final,  "./data/sim_results.csv", row.names = F)
 write.csv(sim_vary_units,  "./data/sim_results_varying_treated_units.csv", row.names = F)
+
+# Conduct a sensitivity analysis using a smaller number of units.
+
+# Hold onto 10 random states:
+df_sub <- df[state %in% sample(state, 10),]
+
+sim_config_single <- optic_simulation(
+  
+  x                        = df_sub,
+  models                   = sim_models,
+  iters                    = 1000,
+  method                   = "time_varying",
+  unit_var                 = "state",
+  treat_var                = "state",
+  time_var                 = "year",
+  effect_magnitude         = time_varying_scenarios,
+  n_units                  = 1,
+  effect_direction         = c("pos"),
+  policy_speed             = c("instant"),
+  n_implementation_periods = c(6)
+  
+)
+
+sim_results_single <- dispatch_simulations(
+  
+  sim_config,
+  seed = 9780,
+  verbose = 0,
+  use_future = F
+  
+)
+
+sim_final_single <- rbindlist(sim_results_single)
+
+write.csv(sim_final_single,  "./data/sim_results_small_n.csv", row.names = F)
 
 # Run models using synthetic states:
 
