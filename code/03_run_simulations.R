@@ -131,7 +131,7 @@ sim_results <- dispatch_simulations(
 sim_final <- rbindlist(sim_results)
 
 # Separate out results into two sets - one for main paper,
-# then varying number of units for appendix:
+# then varying number of units for appendix.
 sim_vary_units <- sim_final[n_units != 25,]
 
 write.csv(sim_final,  "./data/sim_results.csv", row.names = F)
@@ -161,7 +161,7 @@ sim_config_single <- optic_simulation(
 
 sim_results_single <- dispatch_simulations(
   
-  sim_config,
+  sim_config_single,
   seed = 9780,
   verbose = 0,
   use_future = F
@@ -204,5 +204,3 @@ sim_results_synth <- dispatch_simulations(
 sim_final_synth <- rbindlist(sim_results_synth)
 
 write.csv(sim_final_synth,  "./data/sim_results_synthetic_states.csv", row.names = F)
-
-write.csv(sim_final,  "./data/sim_results.csv", row.names = F)

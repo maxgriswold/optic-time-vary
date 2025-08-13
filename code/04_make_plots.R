@@ -13,6 +13,8 @@ df_main <- fread("./data/sim_results.csv")
 df_tunits <- fread("./data/sim_results_varying_treated_units.csv")
 df_synth  <- fread("./data/sim_results_synthetic_states.csv")
 
+df_small <- fread("./data/sim_results_small_n.csv")
+
 # Load synthetic state data
 synth_data <- fread("./data/df_synthetic_states.csv")
 
