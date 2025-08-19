@@ -130,12 +130,22 @@ sim_results <- dispatch_simulations(
 
 sim_final <- rbindlist(sim_results)
 
-# Separate out results into two sets - one for main paper,
-# then varying number of units for appendix.
-sim_vary_units <- sim_final[n_units != 25,]
+# Separate out results into three sets - one for main paper,
+# then varying number of units for appendix & no effect.
+
+# 25 treated units for 5 main scenarios
+sim_vary_units <- sim_final[n_units != 25 & effect_magnitude2 != 0,]
+
+# Varying number of treated units with null effect (only displaying for 25 treated units
+# in the paper)
+sim_null       <- sim_final[effect_magnitude2 == 0,]
+
+# Varying number of treated units for 5 main scenarios
+sim_final      <- sim_final[n_units == 25 & effect_magnitude2 != 0,]
 
 write.csv(sim_final,  "./data/sim_results.csv", row.names = F)
 write.csv(sim_vary_units,  "./data/sim_results_varying_treated_units.csv", row.names = F)
+write.csv(sim_null,  "./data/sim_results_null.csv", row.names = F)
 
 # Conduct a sensitivity analysis using a smaller number of units.
 

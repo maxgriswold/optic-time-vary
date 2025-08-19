@@ -6,14 +6,17 @@ library(gridExtra)
 library(plyr)
 library(data.table)
 
+data(overdoses)
+
 # Load simulations from the article, along
 # with sensitivity simulations for the appendix. 
 
-df_main <- fread("./data/sim_results.csv")
+df_main  <- fread("./data/sim_results.csv")
 df_tunits <- fread("./data/sim_results_varying_treated_units.csv")
 df_synth  <- fread("./data/sim_results_synthetic_states.csv")
 
 df_small <- fread("./data/sim_results_small_n.csv")
+df_null  <- fread("./data/sim_results_null.csv")
 
 # Load synthetic state data
 synth_data <- fread("./data/df_synthetic_states.csv")
@@ -21,8 +24,8 @@ synth_data <- fread("./data/df_synthetic_states.csv")
 # Load scenarios
 scenarios <- fread("./data/scenarios.csv")
 
-# Plot of policy scenario:
-p <- ggplot(scenarios, aes(x = ttt, y = smd)) +
+# Plot of policy scenarios (except null)
+p <- ggplot(scenarios[scenario_name != "V"], aes(x = ttt, y = smd)) +
         geom_point(size = 2.5) +
         geom_line(linewidth = 0.8) +
         facet_wrap(~scenario_name_label) +
@@ -64,7 +67,9 @@ prep_summary <- function(df_sim){
   df_sim[, ttt := ttt - 1]
   
   # Remove rows where errors occurred.
-  # This affects 68 autoregressive models out of 84k sims and 1 CSA run.
+  # This affects 144 autoregressive models out of 168k sims and 1 CSA run from
+  # the main paper results.
+  
   df_sim <- df_sim[!is.na(estimate) & !is.na(se),]
   
   # Calculate GoF statistics
@@ -110,7 +115,7 @@ prep_summary <- function(df_sim){
   time_varying_scenarios <- sapply(time_varying_scenarios, paste, collapse = " ")
   
   scenario_names <- data.frame("scenario_name" = c("Ramp Up", "Ramp Down",
-                                                   "Temporary", "Inconsistent"),
+                                                   "Temporary", "Inconsistent", "No Effect"),
                                "scenario" = time_varying_scenarios)
   
   df_summary <- merge(df_sim, scenario_names, by = "scenario")
@@ -144,19 +149,23 @@ prep_summary <- function(df_sim){
   
 }
   
+# Main results
 df_summary        <- prep_summary(df_main)
-df_summary_tunits <- prep_summary(df_tunits)
-df_summary_synth  <- prep_summary(df_synth)
 
-# Hold onto results for 25 units in df_summary; separate out units
-# in appendix df:
-df_summary <- df_summary[n_units_name == "25 treated units",]
+# Sensitivity analyses
+df_summary_tunits  <- prep_summary(df_tunits)
+df_summary_synth   <- prep_summary(df_synth)
+df_summary_null    <- prep_summary(df_null)
+df_summary_small_n <- prep_summary(df_small)
+
+# Hold onto results for 25 units in df_summary & df_null
+df_summary      <- df_summary[n_units_name == "25 treated units",]
+df_summary_null <- df_summary_null[n_units_name == "25 treated units",]
 
 df_summary_tunits_5  <- df_summary_tunits[n_units_name == "5 treated units",]
 df_summary_tunits_45 <- df_summary_tunits[n_units_name == "45 treated units",]
 
 plot_colors <- c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f', '#cab2d6')
-
 
 #############
 # GOF Plots #
@@ -261,12 +270,27 @@ fig_s2_45 <- sim_bias(df_summary_tunits_45) +
 ggsave(filename = "./plots/appendix/fig_2_bias_45_units.pdf", 
        plot = fig_s2_45, height = 8.27, width = 11.69, units = "in")
 
+# Synthetic
 fig_s2_synth <- sim_bias(df_summary_synth) +
                 scale_y_continuous(breaks = seq(0, 0.3, 0.1),
                                    limits = c(0, 0.3)) 
               
 ggsave(filename = "./plots/appendix/fig_2_bias_synthetic.pdf", 
        plot = fig_s2_synth, height = 8.27, width = 11.69, units = "in")
+
+# No effect
+fig_s2_null <- sim_bias(df_summary_null) +
+                scale_y_continuous(breaks = seq(0, 0.3, 0.1),
+                                   limits = c(0, 0.3)) 
+
+ggsave(filename = "./plots/appendix/fig_2_no_effect.pdf", 
+       plot = fig_s2_null, height = 8.27, width = 11.69, units = "in")
+
+# Small N
+fig_s2_small <- sim_bias(df_summary_small_n)
+
+ggsave(filename = "./plots/appendix/fig_2_small_n.pdf", 
+       plot = fig_s2_small, height = 8.27, width = 11.69, units = "in")
 
 # Summary statistics for paper:
 overall <- df_summary[, mean(.SD$sim_error_50_std), by = "model_name"]
@@ -327,11 +351,26 @@ fig_s3_45 <- sim_se(df_summary_tunits_45)  +
 ggsave(filename = "./plots/appendix/fig_3_model_se_45_units.pdf", plot = fig_s3_45, 
        height = 8.27, width = 11.69, units = "in")
 
+# Synthetic
 fig_s3_synth <- sim_se(df_summary_synth)  +
                 scale_y_continuous(breaks = seq(0, 2.5, 0.5),
                                    limits = c(0, 2.5)) 
 
 ggsave(filename = "./plots/appendix/fig_3_model_se_synthetic.pdf", plot = fig_s3_synth, 
+       height = 8.27, width = 11.69, units = "in")
+
+# No effect
+fig_s3_null<- sim_se(df_summary_null)  +
+              scale_y_continuous(breaks = seq(0, 2.5, 0.5),
+                                 limits = c(0, 2.5)) 
+
+ggsave(filename = "./plots/appendix/fig_3_model_se_null.pdf", plot = fig_s3_null, 
+       height = 8.27, width = 11.69, units = "in")
+
+# Small n
+fig_s3_small <- sim_se(df_summary_small_n)
+
+ggsave(filename = "./plots/appendix/fig_3_model_se_small_n.pdf", plot = fig_s3_small, 
        height = 8.27, width = 11.69, units = "in")
 
 overall <- df_summary[, mean(.SD$model_se_50), by = "model_name"]
@@ -387,6 +426,14 @@ ggsave(filename = "./plots/appendix/fig_4_coverage_45_units.pdf",
 
 ggsave(filename = "./plots/appendix/fig_4_coverage_synthetic.pdf", 
        plot = coverage(df_summary_synth), 
+       height = 8.27, width = 11.69, units = "in")
+
+ggsave(filename = "./plots/appendix/fig_4_coverage_null.pdf", 
+       plot = coverage(df_summary_null), 
+       height = 8.27, width = 11.69, units = "in")
+
+ggsave(filename = "./plots/appendix/fig_4_small_n.pdf", 
+       plot = coverage(df_summary_small_n), 
        height = 8.27, width = 11.69, units = "in")
 
 overall <- df_summary[, mean(.SD$coverage), by = "model_name"]
@@ -447,11 +494,26 @@ fig_s5_45 <- rmse(df_summary_tunits_45) +
 ggsave(filename = "./plots/appendix/fig_5_rmse_45_units.pdf", plot = fig_s5_45, 
        height = 8.27, width = 11.69, units = "in")
 
+# Synthetic
 fig_s5_synth <- rmse(df_summary_synth)  +
                   scale_y_continuous(breaks = seq(0, 8, 2),
                                      limits = c(0, 8))
 
 ggsave(filename = "./plots/appendix/fig_5_rmse_synthetic.pdf", plot = fig_s5_synth, 
+       height = 8.27, width = 11.69, units = "in")
+
+# Null
+fig_s5_null <- rmse(df_summary_null)  +
+              scale_y_continuous(breaks = seq(0, 8, 2),
+                                 limits = c(0, 8))
+
+ggsave(filename = "./plots/appendix/fig_5_null.pdf", plot = fig_s5_null, 
+       height = 8.27, width = 11.69, units = "in")
+
+# Small N
+fig_s5_small_n <- rmse(df_summary_small_n)
+
+ggsave(filename = "./plots/appendix/fig_5_small_n.pdf", plot = fig_s5_small_n, 
        height = 8.27, width = 11.69, units = "in")
 
 # Create appendix plots concerning synthetic state data

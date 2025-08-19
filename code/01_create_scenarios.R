@@ -47,7 +47,7 @@ for (i in 1:5){
 
 scenarios <- rbindlist(scenarios)
 
-long_names <- c("Ramp Up", "Ramp Down", "Temporary", "Inconsistent", "Null")
+long_names <- c("Ramp Up", "Ramp Down", "Temporary", "Inconsistent", "No Effect")
 scenarios[, scenario_name_label := mapvalues(scenario_name, 
                                              c("I", "II", "III", "IV", "V"),
                                              long_names)]
