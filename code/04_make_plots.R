@@ -263,31 +263,23 @@ sim_bias <- function(dd){
                      legend.title = element_text(family = 'sans', size = 12))
 }
 
-fig_2 <- sim_bias(df_summary) +
-        scale_y_continuous(breaks = seq(0, 0.3, 0.1),
-                   limits = c(0, 0.3)) 
+fig_2 <- sim_bias(df_summary)
    
 ggsave(filename = "./plots/fig_2_bias.pdf", 
         plot = fig_2, height = 8.27, width = 11.69, units = "in")
 
-fig_s2_5 <- sim_bias(df_summary_tunits_5) +
-            scale_y_continuous(breaks = seq(0, 0.5, 0.1),
-                               limits = c(0, 0.5)) 
+fig_s2_5 <- sim_bias(df_summary_tunits_5) 
           
 ggsave(filename = "./plots/appendix/fig_2_bias_5_units.pdf", 
        plot = fig_s2_5, height = 8.27, width = 11.69, units = "in")
 
-fig_s2_45 <- sim_bias(df_summary_tunits_45) +
-              scale_y_continuous(breaks = seq(0, 0.4, 0.1),
-                                 limits = c(0, 0.4)) 
+fig_s2_45 <- sim_bias(df_summary_tunits_45) 
 
 ggsave(filename = "./plots/appendix/fig_2_bias_45_units.pdf", 
        plot = fig_s2_45, height = 8.27, width = 11.69, units = "in")
 
 # Synthetic
-fig_s2_synth <- sim_bias(df_summary_synth) +
-                scale_y_continuous(breaks = seq(0, 0.3, 0.1),
-                                   limits = c(0, 0.3)) 
+fig_s2_synth <- sim_bias(df_summary_synth)
               
 ggsave(filename = "./plots/appendix/fig_2_bias_synthetic.pdf", 
        plot = fig_s2_synth, height = 8.27, width = 11.69, units = "in")
@@ -393,25 +385,19 @@ fig_s3_5 <- sim_se(df_summary_tunits_5)  +
 ggsave(filename = "./plots/appendix/fig_3_model_se_5_units.pdf", plot = fig_s3_5, 
        height = 8.27, width = 11.69, units = "in")
 
-fig_s3_45 <- sim_se(df_summary_tunits_45)  +
-              scale_y_continuous(breaks = seq(0, 2.5, 0.5),
-                                 limits = c(0, 2.5)) 
+fig_s3_45 <- sim_se(df_summary_tunits_45)
 
 ggsave(filename = "./plots/appendix/fig_3_model_se_45_units.pdf", plot = fig_s3_45, 
        height = 8.27, width = 11.69, units = "in")
 
 # Synthetic
-fig_s3_synth <- sim_se(df_summary_synth)  +
-                scale_y_continuous(breaks = seq(0, 2.5, 0.5),
-                                   limits = c(0, 2.5)) 
+fig_s3_synth <- sim_se(df_summary_synth) 
 
 ggsave(filename = "./plots/appendix/fig_3_model_se_synthetic.pdf", plot = fig_s3_synth, 
        height = 8.27, width = 11.69, units = "in")
 
 # No effect
-fig_s3_null<- sim_se(df_summary_null)  +
-              scale_y_continuous(breaks = seq(0, 2.5, 0.5),
-                                 limits = c(0, 2.5)) 
+fig_s3_null<- sim_se(df_summary_null) 
 
 ggsave(filename = "./plots/appendix/fig_3_model_se_null.pdf", plot = fig_s3_null, 
        height = 8.27, width = 11.69, units = "in")
