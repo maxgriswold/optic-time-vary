@@ -1,10 +1,9 @@
-rm(list = ls())
-
 library(tidyr)
 library(ggplot2)
 library(gridExtra)
 library(plyr)
 library(data.table)
+library(optic)
 
 data(overdoses)
 
@@ -74,9 +73,21 @@ prep_summary <- function(df_sim){
   
   # Calculate GoF statistics
   
-  #Median sim error & 2.5th/97.5th percentiles
-  df_sim[, sim_error := abs(true_effect - estimate)]
-  df_sim[, sim_error_std := abs((true_effect - estimate)/sd(overdoses$crude.rate, na.rm = T))]
+  #Median absolute error & 2.5th/97.5th percentiles across simulations
+  df_sim[, sim_error_abs := abs(true_effect - estimate)]
+  df_sim[, sim_error_std_abs := abs((true_effect - estimate)/sd(overdoses$crude.rate, na.rm = T))]
+  
+  df_sim[, sim_error_50_abs := quantile(.SD$sim_error, 0.5), by = sum_cols]
+  df_sim[, sim_error_025_abs := quantile(.SD$sim_error, 0.025), by = sum_cols]
+  df_sim[, sim_error_975_abs := quantile(.SD$sim_error, 0.975), by = sum_cols]
+  
+  df_sim[, sim_error_50_std_abs := quantile(.SD$sim_error_std, 0.5), by = sum_cols]
+  df_sim[, sim_error_025_std_abs := quantile(.SD$sim_error_std, 0.025), by = sum_cols]
+  df_sim[, sim_error_975_std_abs := quantile(.SD$sim_error_std, 0.975), by = sum_cols]
+  
+  # Median sim error
+  df_sim[, sim_error := true_effect - estimate]
+  df_sim[, sim_error_std := (true_effect - estimate)/sd(overdoses$crude.rate, na.rm = T)]
   
   df_sim[, sim_error_50 := quantile(.SD$sim_error, 0.5), by = sum_cols]
   df_sim[, sim_error_025 := quantile(.SD$sim_error, 0.025), by = sum_cols]
@@ -158,12 +169,15 @@ df_summary_synth   <- prep_summary(df_synth)
 df_summary_null    <- prep_summary(df_null)
 df_summary_small_n <- prep_summary(df_small)
 
-# Hold onto results for 25 units in df_summary & df_null
+# Hold onto results for 25 units in df_summary & df_null. 
 df_summary      <- df_summary[n_units_name == "25 treated units",]
 df_summary_null <- df_summary_null[n_units_name == "25 treated units",]
 
 df_summary_tunits_5  <- df_summary_tunits[n_units_name == "5 treated units",]
 df_summary_tunits_45 <- df_summary_tunits[n_units_name == "45 treated units",]
+
+# For small N, remove the null effect scenario:
+df_summary_small_n <- df_summary_small_n[scenario_name != "V",]
 
 plot_colors <- c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f', '#cab2d6')
 
@@ -223,7 +237,7 @@ ggsave(filename = "./plots/appendix/fig_s1_model_error_v_se.pdf",
 ############
 
 sim_bias <- function(dd){
-  ggplot(dd, aes(x = ttt, y = sim_error_50_std, color = model_name)) +
+  ggplot(dd, aes(x = ttt, y = sim_error_50_std_abs, color = model_name)) +
                geom_point(size = 2, shape = 19) +
                geom_line(size = 0.5, linetype = 2) +
                facet_wrap(~scenario_name_label) +
@@ -300,7 +314,42 @@ overall_scenario <- df_summary[, mean(.SD$sim_error_50_std), by = "scenario_name
 
 scenario <- df_summary[, mean(.SD$sim_error_50_std), by = c("model_name", "scenario_name_label")]
 setorder(scenario, scenario_name_label, V1)
+
+# Also look at the direction of bias:
+
+sim_bias_direct <- function(dd){
+  ggplot(dd, aes(x = ttt, y = sim_error_50, color = model_name)) +
+               geom_point(size = 2, shape = 19, 
+                          position = position_dodge(width = 0.9)) +
+               geom_segment(aes(y = sim_error_025, yend = sim_error_975), 
+                            position = position_dodge(width = 0.9)) +
+               facet_wrap(~scenario_name_label) +
+               theme_bw() +
+               labs(y = "Bias  ",
+                    x = "Years since treatment",
+                    color = "Estimator") +
+               scale_color_manual(values = plot_colors) +
+               guides(color = guide_legend(nrow = 2, byrow = T)) +
+               theme(plot.title = element_text(hjust = 0.5, family = 'sans', size = 18),
+                     strip.background = element_blank(),
+                     strip.text = element_text(family = "sans", size = 14),
+                     legend.position = "bottom",
+                     legend.text = element_text(family = 'sans', size = 12),
+                     axis.ticks = element_line(linewidth = 1),
+                     axis.ticks.length = unit(5.6, "points"),
+                     axis.title = element_text(size = 14, family = 'sans'),
+                     axis.title.y = element_text(size = 14, family = 'sans', angle = 0),
+                     axis.text = element_text(size = 10, family = 'sans'),
+                     axis.text.x = element_text(size = 10, family = 'sans',
+                                                margin = margin(t = 5, r = 0, b = 10, l = 0)),
+                     legend.title = element_text(family = 'sans', size = 12))
+}
  
+fig_s_bias_direct <- sim_bias_direct(df_summary)
+
+ggsave(filename = "./plots/appendix/fig_bias_direct.pdf", 
+       plot = fig_s_bias_direct, height = 8.27, width = 11.69, units = "in")
+
 ################
 # Sim variance #
 ################
